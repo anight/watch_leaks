@@ -200,10 +200,7 @@ class watch_leaks(gdb.Command):
 					return True
 				thread_id = int(gdb.selected_thread().num)
 				fn_args, fn_stacktrace = get_args(), get_stacktrace()
-				if thread_id in threads:
-					print "already tracking", threads[thread_id]
-					print "current call", self.fn_name, fn_args, fn_stacktrace
-					raise Exception("oops")
+				assert thread_id not in threads
 				if self.fn_name == 'free':
 					add_call(allocs, free_stats, call_stats, self.fn_name, fn_args, fn_stacktrace, None)
 					return False
@@ -218,8 +215,7 @@ class watch_leaks(gdb.Command):
 
 			def stop(self):
 				thread_id = int(gdb.selected_thread().num)
-				if thread_id not in threads:
-					raise Exception("oops")
+				assert thread_id in threads
 				fn_result = get_result()
 				fn_name, fn_args, fn_stacktrace = threads[thread_id]
 				assert fn_name == self.on_enter.fn_name
