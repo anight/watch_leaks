@@ -102,9 +102,7 @@ def add_call(allocs, free_stats, call_stats, fn_name, fn_args, fn_stacktrace, fn
 		retaddr = fn_result
 		assert retaddr != 0
 		if fn_args[0] == 0:
-			if retaddr in allocs:
-				print allocs[retaddr]
-				assert retaddr not in allocs
+			assert retaddr not in allocs
 			allocs[retaddr] = (fn_stacktrace, sz)
 			call_stats['realloc'] += 1
 			call_stats['realloc_bytes'] += sz
