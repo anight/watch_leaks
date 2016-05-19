@@ -1,4 +1,13 @@
 
+"""
+ (c) Andrei Nigmatulin, 2016
+
+ runtime memory detector, x86_64 only
+
+ to detect memory leaks:
+ $ gdb -q --batch -ex 'set python print-stack full' -ex 'source watch_leaks.py' -ex 'watch_leaks 30 je_' -p <pid>
+"""
+
 import gdb, time, operator
 from collections import defaultdict
 
