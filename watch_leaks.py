@@ -11,6 +11,9 @@
 import gdb, time, operator
 from collections import defaultdict
 
+if sys.version_info > (3,):
+    long = int
+
 def get_stacktrace():
 
 	def get_pc_line(frame):
@@ -145,7 +148,7 @@ class watch_leaks(gdb.Command):
 	def dump_leaks(self, allocs, free_stats):
 
 		if len(allocs) == 0:
-			print "no allocations - no leaks"
+			print("no allocations - no leaks")
 			return
 
 		combined = {}
@@ -155,23 +158,29 @@ class watch_leaks(gdb.Command):
 				combined[stacktrace] = (0, 0)
 			combined[stacktrace] = ( combined[stacktrace][0] + sz, combined[stacktrace][1] + 1 )
 
-		most = sorted(combined.iteritems(), key=operator.itemgetter(1), reverse=True)
+		# we need this to support both python2 and python3
+		try:
+			iteritems = combined.iteritems()
+		except AttributeError:
+			iteritems = combined.values()
 
-		print
-		print "leaks detected:"
-		print
+		most = sorted(iteritems, key=operator.itemgetter(1), reverse=True)
+
+		print()
+		print("leaks detected:")
+		print()
 
 		for stacktrace, (sz, chunks) in most:
-			print sz, "bytes leak in", chunks, "chunks"
-			print "-------"
-			print stacktrace
-			print "-------"
-			print
+			print(sz, "bytes leak in", chunks, "chunks")
+			print("-------")
+			print(stacktrace)
+			print("-------")
+			print()
 			if stacktrace in free_stats:
 				for k, v in free_stats[stacktrace].items():
-					print "\t", v, "times:"
-					print "\t", "\n\t".join(k.split('\n'))
-					print
+					print("\t", v, "times:")
+					print("\t", "\n\t".join(k.split('\n')))
+					print()
 
 
 	def invoke(self, args, from_tty):
@@ -225,7 +234,7 @@ class watch_leaks(gdb.Command):
 
 		def setup(fn_name):
 			fn_full_name = self.prefix + fn_name
-			print 'setting up breakpoint for', fn_full_name
+			print('setting up breakpoint for', fn_full_name)
 			on_enter_instance = on_enter(fn_name, fn_full_name)
 
 			# free() does not need a finishing breakpoint, because it returns a void
@@ -250,7 +259,7 @@ class watch_leaks(gdb.Command):
 			while ptr < block.end:
 				da = arch.disassemble(ptr)[0]
 				if da['asm'].rstrip().endswith('retq'):
-					print 'setting up finish breakpoint for', da
+					print('setting up finish breakpoint for', da)
 					on_result_ready_instance = on_result_ready(on_enter_instance, '*0x%lx' % da['addr'])
 				ptr += da['length']
 
@@ -260,14 +269,14 @@ class watch_leaks(gdb.Command):
 		setup("posix_memalign")
 		setup("free")
 
-		print "breakpoints created, now watching"
+		print("breakpoints created, now watching")
 
 		gdb.execute('continue')
 
-		print "done watching"
+		print("done watching")
 
 		for k, v in call_stats.items():
-			print k, v
+			print(k, v)
 
 		self.dump_leaks(allocs, free_stats)
 
